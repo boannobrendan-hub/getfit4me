@@ -1,0 +1,35 @@
+# Flutter / Dart
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+pubspec.lock
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Firebase — never commit real config or service account keys
+lib/firebase_options.dart.bak
+**/google-services.json
+**/GoogleService-Info.plist
+firebase-debug.log
+.firebase/
+
+# Functions
+functions/node_modules/
+functions/lib/
+functions/.env
+functions/*.local
+
+# macOS / Windows junk
+.DS_Store
+Thumbs.db
+
+# Large media — exercise videos shouldn't go in source control; host on a
+# CDN / cloud storage instead and reference by URL, or use Git LFS.
+assets/exercise_videos/*.mp4

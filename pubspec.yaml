@@ -1,0 +1,60 @@
+name: getfit4me
+description: GetFit4Me — adaptive sport-performance and medical-condition coaching app.
+publish_to: 'none'
+version: 1.0.0+23
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+
+
+  # Firebase — auth, data, cloud functions for secure backend calls
+  firebase_core: ^3.6.0
+  firebase_auth: ^5.3.1
+  cloud_firestore: ^5.4.4
+  cloud_functions: ^5.1.3
+  firebase_app_check: ^0.3.1+6
+
+  # Payments
+  # Stripe: official Flutter SDK. Card data never touches our server —
+  # the SDK tokenizes locally and our backend (Cloud Functions) only ever
+  # sees a PaymentIntent client secret, never raw card numbers.
+  # PayPal: opens the hosted approval flow in a webview. Our backend
+  # creates/captures orders via PayPal's REST API using server-side
+  # credentials that never ship in the app.
+  webview_flutter: ^4.10.0
+
+  # Media
+  video_player: ^2.9.2
+
+  # Utilities
+  intl: ^0.19.0
+  url_launcher: ^6.3.1
+
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.14.3
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/exercise_videos/
+    - assets/images/
+
+  # fonts:
+  #   - family: YourCustomFont
+  #     fonts:
+  #       - asset: assets/fonts/YourCustomFont-Regular.ttf
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/icon.png"

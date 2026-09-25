@@ -1,0 +1,13 @@
+Drop your filmed exercise demo clips here once ready (e.g. squat.mp4,
+pushup.mp4, lunge.mp4 — one per movement category is enough to cover all
+100 exercises across the sport/condition libraries).
+
+See lib/widgets/exercise_illustration.dart for how to wire these in via
+the videoAssetForCategory map, and README.md for the full setup steps
+(adding video_player to pubspec.yaml's active dependencies, registering
+this folder in pubspec.yaml's flutter: assets: section — already done —
+and the VideoPlayerController integration code).
+
+This folder is excluded from git via .gitignore since video files are
+large; host them on a CDN/cloud storage in production instead, or use
+Git LFS if you want them version-controlled directly.
