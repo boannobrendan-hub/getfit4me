@@ -15,11 +15,15 @@
       - name: Get Flutter packages
         script: |
           flutter packages pub get
+      - name: Set up code signing
+        script: |
+          xcode-project use-profiles
       - name: Flutter build ipa
         script: |
-          flutter build ipa --release
+          flutter build ipa --release --export-options-plist=/Users/builder/export_options.plist
     artifacts:
       - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
     publishing:
       app_store_connect:
         api_key: $APP_STORE_CONNECT_PRIVATE_KEY
