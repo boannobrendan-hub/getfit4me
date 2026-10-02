@@ -20,12 +20,8 @@
           xcode-project use-profiles
       - name: Flutter build ipa
         script: |
-          flutter build ipa \
-            --release \
-            --no-codesign
-          xcode-project build-ipa \
-            --workspace ios/Runner.xcworkspace \
-            --scheme Runner
+          flutter build ipa --release --no-codesign
+          xcode-project build-ipa --workspace ios/Runner.xcworkspace --scheme Runner
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
@@ -34,4 +30,5 @@
         api_key: $APP_STORE_CONNECT_PRIVATE_KEY
         key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
         issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        app_id: 6817053447
         submit_to_testflight: true
