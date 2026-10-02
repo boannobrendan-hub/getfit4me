@@ -48,7 +48,26 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                   minimumSize: const Size(44, 44),
                 ),
-                onPressed: () => Navigator.pop(context),
+                onPressed: () {
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: const Color(0xFF1A2C3D),
+      title: const Text('Subscription Required', 
+        style: TextStyle(color: Colors.white)),
+      content: const Text(
+        'A subscription is required to use GetFit4Me. Please visit getfit4me.com to subscribe, or start your 3-Day Free Trial!', 
+        style: TextStyle(color: Colors.grey)),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: const Text('OK', 
+            style: TextStyle(color: Color(0xFF00BFA5))),
+        ),
+      ],
+    ),
+  );
+},
                 child: const Text('✕ Skip', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ),
