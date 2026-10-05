@@ -1,11 +1,16 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import '../models/coach.dart';
 
-/// Shown immediately after a workout is completed. Captures a quick star
-/// rating, optional quick-tag chips, and an optional free-text note.
-/// Ported from the DartPad prototype — UI is unchanged, but submission now
-/// goes through FirestoreService (wired in MainShell) instead of an
-/// in-memory list.
+const _bibleVerses = [
+  ['I can do all things through Christ who strengthens me.', 'Philippians 4:13'],
+  ['Do you not know that your body is a temple of the Holy Spirit?', '1 Corinthians 6:19'],
+  ['But those who hope in the Lord will renew their strength.', 'Isaiah 40:31'],
+  ['For physical training is of some value, but godliness has value for all things.', '1 Timothy 4:8'],
+  ['Be strong and courageous. Do not be afraid; do not be discouraged.', 'Joshua 1:9'],
+  ['The Lord is my strength and my shield; my heart trusts in him.', 'Psalm 28:7'],
+];
+
 class WorkoutFeedbackScreen extends StatefulWidget {
   final Coach coach;
   final String activeSelection;
@@ -25,6 +30,8 @@ class WorkoutFeedbackScreen extends StatefulWidget {
 }
 
 class _WorkoutFeedbackScreenState extends State<WorkoutFeedbackScreen> {
+  late final String _verseText;
+  late final String _verseRef;
   int _rating = 0;
   final Set<String> _selectedTags = {};
   final _noteController = TextEditingController();
@@ -33,6 +40,14 @@ class _WorkoutFeedbackScreenState extends State<WorkoutFeedbackScreen> {
     'Loved it', 'Felt great', 'Too easy', 'Too hard',
     'Felt exhausted', 'Pain or discomfort', 'Needed more time', 'Right level',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    final picked = _bibleVerses[Random().nextInt(_bibleVerses.length)];
+    _verseText = picked[0];
+    _verseRef = picked[1];
+  }
 
   @override
   void dispose() {
@@ -59,6 +74,26 @@ class _WorkoutFeedbackScreenState extends State<WorkoutFeedbackScreen> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF1A237E), Color(0xFF4A148C)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text('Word for Today', style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1)),
+              const SizedBox(height: 8),
+              Text('"$_verseText"', style: const TextStyle(color: Colors.white, fontSize: 14, fontStyle: FontStyle.italic, height: 1.5)),
+              const SizedBox(height: 6),
+              Text('� $_verseRef', style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold)),
+            ]),
+          ),
+          const SizedBox(height: 16),
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -100,7 +135,7 @@ class _WorkoutFeedbackScreenState extends State<WorkoutFeedbackScreen> {
           const SizedBox(height: 28),
           const Text('Anything you want to flag? (optional)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
           const SizedBox(height: 4),
-          Text('Select any that apply — this helps tune your next session.', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+          Text('Select any that apply - this helps tune your next session.', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8, runSpacing: 8,
@@ -108,11 +143,8 @@ class _WorkoutFeedbackScreenState extends State<WorkoutFeedbackScreen> {
               final selected = _selectedTags.contains(tag);
               return GestureDetector(
                 onTap: () => setState(() {
-                  if (selected) {
-                    _selectedTags.remove(tag);
-                  } else {
-                    _selectedTags.add(tag);
-                  }
+                  if (selected) _selectedTags.remove(tag);
+                  else _selectedTags.add(tag);
                 }),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 120),
@@ -167,11 +199,11 @@ class _WorkoutFeedbackScreenState extends State<WorkoutFeedbackScreen> {
 
   String _ratingLabel(int rating) {
     switch (rating) {
-      case 1: return 'That was rough — thanks for telling me';
-      case 2: return 'Tougher than expected — noted';
+      case 1: return 'That was rough - thanks for telling me';
+      case 2: return 'Tougher than expected - noted';
       case 3: return 'Solid session';
       case 4: return 'Great session!';
-      case 5: return 'Excellent — loved that!';
+      case 5: return 'Excellent - loved that!';
       default: return '';
     }
   }
