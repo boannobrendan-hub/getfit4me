@@ -1,8 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
-/// Charismatic 4-page onboarding intro shown before the waiver. Identical
-/// in content/structure to the DartPad prototype â€” purely presentational,
-/// no backend dependency.
 class HookScreen extends StatefulWidget {
   final VoidCallback onContinue;
   const HookScreen({super.key, required this.onContinue});
@@ -18,33 +15,33 @@ class _HookScreenState extends State<HookScreen> {
   static const _pages = [
     {
       'gradient': [Color(0xFF0D1B2A), Color(0xFF134E4A)],
-      'emoji': 'ðŸ”¥',
+      'emoji': '🔥',
       'title': "Your Comeback\nStarts Right Now.",
-      'subtitle': "Real training for real bodies â€” built around YOUR sport AND your condition, not despite them. No judgment. No cookie-cutter plans. Just progress.",
+      'subtitle': "Real training for real bodies - built around YOUR sport AND your condition, not despite them. No judgment. No cookie-cutter plans. Just progress.",
     },
     {
       'gradient': [Color(0xFF134E4A), Color(0xFF1B3A4B)],
-      'emoji': 'ðŸ‘¥',
+      'emoji': '💥',
       'title': "Meet Your\nDream Team.",
-      'subtitle': "ðŸ”¥ Brendan for wellness & strength.\nðŸ’™ Justin for conditioning & endurance.\nâš¡ Cameron for power & strength.\nðŸŒŠ Bell for recovery & endurance.\n\nFour coaches. Zero ego. All heart.",
+      'subtitle': "🔥 Brendan for wellness & strength.\n💙 Justin for conditioning & endurance.\n⚡ Cameron for power & strength.\n🌊 Bell for recovery & endurance.\n\nFour coaches. Zero ego. All heart.",
     },
     {
       'gradient': [Color(0xFF1B3A4B), Color(0xFF0F2C3A)],
-      'emoji': 'âš¡',
+      'emoji': '⚡',
       'title': "Built Around\nYOU. Every Day.",
-      'subtitle': "Tell us how you're feeling â€” your energy, your pain, your sport or condition â€” and your routine adapts instantly. Smart enough to push you. Caring enough to know when to pull back.",
+      'subtitle': "Tell us how you are feeling - your energy, your pain, your sport or condition - and your routine adapts instantly. Smart enough to push you. Caring enough to know when to pull back.",
     },
     {
       'gradient': [Color(0xFF1A237E), Color(0xFF4A148C)],
       'emoji': '✝️',
       'title': "Strengthen Your\nTemple.",
-      'subtitle': "\"Do you not know that your bodies are temples of the Holy Spirit?\"\n— 1 Corinthians 6:19\n\nGetFit4Me was built on the belief that honoring God starts with how you treat the body He gave you. Let's train with purpose.",
+      'subtitle': "Do you not know that your bodies are temples of the Holy Spirit?\n- 1 Corinthians 6:19\n\nGetFit4Me was built on the belief that honoring God starts with how you treat the body He gave you. Let us train with purpose.",
     },
     {
       'gradient': [Color(0xFF0F2C3A), Color(0xFF0D1B2A)],
       'emoji': '🚀',
       'title': "Today Is the\nDay Things Change.",
-      'subtitle': "Millions of people are waiting for 'someday.'\n\nYou don't have to. Your team is ready, your plan is ready â€” let's go meet them.",
+      'subtitle': "Millions of people are waiting for someday.\n\nYou do not have to. Your team is ready, your plan is ready - let us go meet them.",
     },
   ];
 
@@ -132,7 +129,7 @@ class _HookScreenState extends State<HookScreen> {
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00BFA5), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), elevation: 0),
                   onPressed: _next,
-                  child: Text(isLast ? "Let's Go! ðŸš€" : 'Next', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 0.3)),
+                  child: Text(isLast ? "Let's Go! 🚀" : 'Next', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 0.3)),
                 ),
               ),
             ),
@@ -142,4 +139,3 @@ class _HookScreenState extends State<HookScreen> {
     );
   }
 }
-

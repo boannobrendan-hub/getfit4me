@@ -200,7 +200,34 @@ class _MainShellState extends State<MainShell> {
       ),
     );
   }
-
+  Widget _buildDailyDevotional() {
+    final devotionals = [
+      ['🌅 Monday — Strength', 'Be strong and courageous. The Lord your God will be with you wherever you go.', 'Joshua 1:9'],
+      ['🔥 Tuesday — Fire', 'I can do all things through Christ who strengthens me.', 'Philippians 4:13'],
+      ['⚡ Wednesday — Power', 'The Lord is my strength and my shield; my heart trusts in him.', 'Psalm 28:7'],
+      ['🙏 Thursday — Discipline', 'No discipline seems pleasant at the time. Later on, it produces a harvest of righteousness.', 'Hebrews 12:11'],
+      ['✝️ Friday — Temple', 'Do you not know that your body is a temple of the Holy Spirit? Honor God with your body.', '1 Corinthians 6:19-20'],
+      ['🌊 Saturday — Endurance', 'Those who hope in the Lord will renew their strength. They will soar on wings like eagles.', 'Isaiah 40:31'],
+      ['☀️ Sunday — Rest', 'Come to me, all you who are weary and burdened, and I will give you rest.', 'Matthew 11:28'],
+    ];
+    final day = DateTime.now().weekday - 1;
+    final d = devotionals[day];
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(colors: [Color(0xFF1A237E), Color(0xFF4A148C)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(d[0], style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1)),
+        const SizedBox(height: 8),
+        Text('"${d[1]}"', style: const TextStyle(color: Colors.white, fontSize: 13, fontStyle: FontStyle.italic, height: 1.5)),
+        const SizedBox(height: 6),
+        Text('— ${d[2]}', style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold)),
+      ]),
+    );
+  }
   // ── DIAGNOSTICS TAB ────────────────────────────────────────────────────────
   Widget _buildDiagnosticsView() {
     return Scaffold(
@@ -208,6 +235,8 @@ class _MainShellState extends State<MainShell> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    _buildDailyDevotional(),
+          const SizedBox(height: 16),
           const Text('Today, are you training for...', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
           const SizedBox(height: 10),
           Row(children: [
