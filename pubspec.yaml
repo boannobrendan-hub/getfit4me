@@ -1,7 +1,7 @@
 name: getfit4me
 description: GetFit4Me — adaptive sport-performance and medical-condition coaching app.
 publish_to: 'none'
-version: 1.0.0+30
+version: 1.0.0+31
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
@@ -36,6 +36,8 @@ dependencies:
   url_launcher: ^6.3.1
 
   cupertino_icons: ^1.0.8
+  purchases_flutter: ^10.16.0
+  purchases_ui_flutter: ^10.16.0
 
 dev_dependencies:
   flutter_test:
