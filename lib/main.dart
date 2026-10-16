@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 
 import 'firebase_options.dart';
 import 'screens/auth_screen.dart';
@@ -18,18 +19,11 @@ Future<void> main() async {
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // App Check helps reject requests to Cloud Functions/Firestore that
-  // don't come from a genuine instance of this app — set up providers per
-  // platform once you have your Play Integrity / App Attest / reCAPTCHA
-  // keys from the Firebase console.
- // await FirebaseAppCheck.instance.activate(
-  //   androidProvider: AndroidProvider.debug,
-  //   appleProvider: AppleProvider.appAttest,
-  //   webProvider: ReCaptchaV3Provider('REPLACE_WITH_YOUR_RECAPTCHA_V3_SITE_KEY'),
-  // );
-
-  // Publishable key only — safe to ship in the app. The secret key lives
-  // exclusively in Cloud Functions config (see functions/README.md).
+  // Initialize RevenueCat
+  await Purchases.setLogLevel(LogLevel.debug);
+  await Purchases.configure(
+    PurchasesConfiguration('appl_wLMSomVpuKbkFvrmfPMxZTXFNzO'),
+  );
 
   runApp(const GetFit4MeApp());
 }
