@@ -15,9 +15,6 @@
       - name: Get Flutter packages
         script: |
           flutter packages pub get
-      - name: Generate Flutter iOS files
-        script: |
-          flutter build ios --config-only --release
       - name: Install CocoaPods
         script: |
           cd ios && pod install && cd ..
