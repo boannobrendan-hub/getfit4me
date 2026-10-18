@@ -64,7 +64,8 @@ class _PaywallScreenState extends State<PaywallScreen> {
     );
     setState(() => _processing = true);
     try {
-      final info = await Purchases.purchasePackage(pkg);
+      await Purchases.purchasePackage(pkg);
+      final info = await Purchases.getCustomerInfo();
       final entitlement = info.entitlements.all['GetFit4Me Pro'];
       if (entitlement != null && entitlement.isActive) {
         await _firestoreService.updateSubscription(
