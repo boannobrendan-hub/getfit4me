@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/coach.dart';
 import '../models/coach_brain.dart';
 import '../models/exercise_matrices.dart';
 import '../models/subscription_state.dart';
+import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
 import '../widgets/exercise_illustration.dart';
 import 'workout_feedback_screen.dart';
@@ -24,7 +26,9 @@ class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
   String _selectedSport = 'Basketball';
   String _selectedCondition = 'Rheumatoid Arthritis';
+  String _selectedFatLoss = 'Full Body Burn';
   bool _isSportMode = true;
+  bool _isFatLossMode = false;
   double _energyLevel = 5.0;
   bool _hasJointPain = false;
 
@@ -92,12 +96,16 @@ class _MainShellState extends State<MainShell> {
   }
 
   // ── Active category helpers ──────────────────────────────────────────────
-  Map<String, Map<String, dynamic>> get _activeMatrix => _isSportMode ? kSportMatrix : kMedicalMatrix;
-  String get _activeSelection => _isSportMode ? _selectedSport : _selectedCondition;
+  Map<String, Map<String, dynamic>> get _activeMatrix =>
+      _isFatLossMode ? kFatLossMatrix : (_isSportMode ? kSportMatrix : kMedicalMatrix);
+  String get _activeSelection =>
+      _isFatLossMode ? _selectedFatLoss : (_isSportMode ? _selectedSport : _selectedCondition);
 
   void _setActiveSelection(String value) {
     setState(() {
-      if (_isSportMode) {
+      if (_isFatLossMode) {
+        _selectedFatLoss = value;
+      } else if (_isSportMode) {
         _selectedSport = value;
       } else {
         _selectedCondition = value;
@@ -241,16 +249,20 @@ class _MainShellState extends State<MainShell> {
           const SizedBox(height: 10),
           Row(children: [
             Expanded(
-              child: _modeButton('🏆 Sport Performance', _isSportMode, () => setState(() => _isSportMode = true)),
+              child: _modeButton('🏆 Sport', _isSportMode && !_isFatLossMode, () => setState(() { _isSportMode = true; _isFatLossMode = false; })),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 8),
             Expanded(
-              child: _modeButton('🩺 Medical Condition', !_isSportMode, () => setState(() => _isSportMode = false)),
+              child: _modeButton('🩺 Medical', !_isSportMode && !_isFatLossMode, () => setState(() { _isSportMode = false; _isFatLossMode = false; })),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _modeButton('🔥 Fat Loss', _isFatLossMode, () => setState(() { _isFatLossMode = true; })),
             ),
           ]),
 
           const SizedBox(height: 16),
-          Text(_isSportMode ? "Select Your Sport:" : "Select Your Condition:", style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF00897B))),
+          Text(_isFatLossMode ? "Select Your Goal:" : (_isSportMode ? "Select Your Sport:" : "Select Your Condition:"), style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF00897B))),
           const SizedBox(height: 6),
           DropdownButton<String>(
             value: _activeSelection,
@@ -268,13 +280,17 @@ class _MainShellState extends State<MainShell> {
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 title: Text(
-                  _isSportMode ? "Also managing a medical condition?" : "Also training for a specific sport?",
+                  _isFatLossMode
+                      ? "Also managing a medical condition?"
+                      : (_isSportMode ? "Also managing a medical condition?" : "Also training for a specific sport?"),
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                 ),
                 subtitle: Text(
-                  _isSportMode
-                      ? "We'll explain how your $_selectedSport training adjusts for it."
-                      : "We'll explain how managing $_selectedCondition affects your $_crossRefSport training.",
+                  _isFatLossMode
+                      ? "We'll note any condition that may affect your fat-loss plan."
+                      : (_isSportMode
+                          ? "We'll explain how your $_selectedSport training adjusts for it."
+                          : "We'll explain how managing $_selectedCondition affects your $_crossRefSport training."),
                   style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
                 ),
                 value: _crossRefEnabled,
@@ -786,6 +802,22 @@ class _MainShellState extends State<MainShell> {
   final _chatController = TextEditingController();
   final _chatScrollController = ScrollController();
 
+  void _sendQuickReply(String text) {
+    _chatController.text = text;
+    _sendChatMessage();
+  }
+
+  static const _quickReplies = [
+    '💪  Build my next workout',
+    '😓  I\'m feeling sore today',
+    '🔥  Make it harder next time',
+    '⏱️  I only have 20 minutes',
+    '🥗  What should I eat today?',
+    '✈️  I\'m traveling this week',
+    '🦵  I have joint pain today',
+    '🚀  Motivate me!',
+  ];
+
   void _sendChatMessage() {
     final text = _chatController.text.trim();
     if (text.isEmpty) return;
@@ -951,27 +983,57 @@ class _MainShellState extends State<MainShell> {
                 ),
         ),
         Container(
-          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(color: Colors.white, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, offset: const Offset(0, -2))]),
           child: SafeArea(
-            child: Row(children: [
-              Expanded(
-                child: TextField(
-                  controller: _chatController,
-                  decoration: InputDecoration(
-                    hintText: 'Message ${_coach.name}...',
-                    filled: true,
-                    fillColor: Colors.grey.shade100,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none),
-                  ),
-                  onSubmitted: (_) => _sendChatMessage(),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              // ── Quick-reply chips ──────────────────────────────────────────
+              SizedBox(
+                height: 44,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  itemCount: _quickReplies.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  itemBuilder: (context, i) {
+                    final label = _quickReplies[i];
+                    return GestureDetector(
+                      onTap: () => _sendQuickReply(label),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: _coach.accentColor.withOpacity(0.10),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: _coach.accentColor.withOpacity(0.35)),
+                        ),
+                        child: Text(label, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: _coach.accentColor)),
+                      ),
+                    );
+                  },
                 ),
               ),
-              const SizedBox(width: 8),
-              CircleAvatar(
-                backgroundColor: const Color(0xFF00897B),
-                child: IconButton(icon: const Icon(Icons.send, color: Colors.white, size: 18), onPressed: _sendChatMessage),
+              // ── Text input row ─────────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                child: Row(children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _chatController,
+                      decoration: InputDecoration(
+                        hintText: 'Message ${_coach.name}...',
+                        filled: true,
+                        fillColor: Colors.grey.shade100,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none),
+                      ),
+                      onSubmitted: (_) => _sendChatMessage(),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  CircleAvatar(
+                    backgroundColor: const Color(0xFF00897B),
+                    child: IconButton(icon: const Icon(Icons.send, color: Colors.white, size: 18), onPressed: _sendChatMessage),
+                  ),
+                ]),
               ),
             ]),
           ),
@@ -1255,8 +1317,95 @@ class _MainShellState extends State<MainShell> {
       ),
     );
     if (confirmed != true) return;
-    // NOTE: call AuthService().signOut() here — _RootRouter's authStateChanges
-    // listener will automatically route back to AuthScreen once signed out.
+    await AuthService().signOut();
+    if (mounted) {
+      Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+    }
+  }
+
+  Future<void> _deleteAccount() async {
+    // Step 1 — warn the user clearly.
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Account?', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: const Text(
+          'This will permanently delete your account and all your data — workouts, trophies, everything.\n\nThis cannot be undone.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Continue', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    // Step 2 — re-authenticate (Firebase requires this before account delete).
+    final passwordController = TextEditingController();
+    final reauthed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Confirm Your Password', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Text('Enter your password to confirm account deletion.', style: TextStyle(fontSize: 13)),
+          const SizedBox(height: 16),
+          TextField(
+            controller: passwordController,
+            obscureText: true,
+            autofocus: true,
+            decoration: InputDecoration(
+              hintText: 'Your password',
+              filled: true,
+              fillColor: Colors.grey.shade100,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            ),
+          ),
+        ]),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete My Account', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+    if (reauthed != true || !mounted) return;
+
+    // Step 3 — re-authenticate with Firebase then delete.
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null || user.email == null) return;
+
+      final credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: passwordController.text,
+      );
+      await user.reauthenticateWithCredential(credential);
+
+      // Delete Firestore data first, then the Auth account.
+      await _firestoreService.deleteUserData(user.uid);
+      await user.delete();
+
+      // Auth state change will route back to AuthScreen automatically.
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      String message = 'Something went wrong. Please try again.';
+      if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
+        message = 'Incorrect password. Please try again.';
+      } else if (e.code == 'too-many-requests') {
+        message = 'Too many attempts. Please wait a moment and try again.';
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), backgroundColor: Colors.red.shade700),
+      );
+    } finally {
+      passwordController.dispose();
+    }
   }
 
   Widget _buildAccountView() {
@@ -1359,6 +1508,27 @@ class _MainShellState extends State<MainShell> {
               label: const Text('Sign Out', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
             ),
           ),
+
+          const SizedBox(height: 12),
+          const Divider(),
+          const SizedBox(height: 8),
+          Center(
+            child: TextButton(
+              onPressed: _deleteAccount,
+              child: const Text(
+                'Delete Account',
+                style: TextStyle(color: Colors.red, fontSize: 13, decoration: TextDecoration.underline, decorationColor: Colors.red),
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Center(
+            child: Text(
+              'Permanently removes all your data.',
+              style: TextStyle(fontSize: 11, color: Colors.grey.shade400),
+            ),
+          ),
+          const SizedBox(height: 16),
         ]),
       ),
     );
