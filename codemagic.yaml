@@ -15,10 +15,6 @@
       - name: Get Flutter packages
         script: |
           flutter packages pub get
-          flutter precache --ios
-      - name: Install CocoaPods
-        script: |
-          cd ios && pod install && cd ..
       - name: Set up code signing
         script: |
           xcode-project use-profiles
