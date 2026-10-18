@@ -127,4 +127,27 @@ class FirestoreService {
         .get();
     return snap.docs.map((d) => d.data()).toList();
   }
+
+  /// Deletes all Firestore data for the given user. Called immediately before
+  /// Firebase Auth account deletion so no orphaned data remains.
+  /// Subcollections (completions, feedback) are deleted first, then the
+  /// parent user document.
+  Future<void> deleteUserData(String uid) async {
+    final userRef = _db.collection('users').doc(uid);
+
+    // Delete completions subcollection
+    final completions = await userRef.collection('completions').get();
+    for (final doc in completions.docs) {
+      await doc.reference.delete();
+    }
+
+    // Delete feedback subcollection
+    final feedback = await userRef.collection('feedback').get();
+    for (final doc in feedback.docs) {
+      await doc.reference.delete();
+    }
+
+    // Delete the user document itself
+    await userRef.delete();
+  }
 }
