@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/coach.dart';
+import 'auth_screen.dart';
 import '../models/coach_brain.dart';
 import '../models/exercise_matrices.dart';
 import '../models/subscription_state.dart';
@@ -1319,7 +1320,10 @@ class _MainShellState extends State<MainShell> {
     if (confirmed != true) return;
     await AuthService().signOut();
     if (mounted) {
-      Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const AuthScreen()),
+        (route) => false,
+      );
     }
   }
 
