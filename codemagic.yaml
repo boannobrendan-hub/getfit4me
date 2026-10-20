@@ -19,14 +19,32 @@
         script: |
           echo $CM_PROVISIONING_PROFILE | base64 --decode > /tmp/profile.mobileprovision
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp /tmp/profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
+          UUID=$(grep -a -A 1 'UUID' /tmp/profile.mobileprovision | grep -io '[-A-F0-9]\{36\}')
+          cp /tmp/profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/${UUID}.mobileprovision
+          echo "Installed profile with UUID: $UUID"
           xcode-project use-profiles
       - name: Flutter build ipa
         script: |
-          flutter build ipa --release \
-            --export-method app-store \
-            --export-option-plist /tmp/export_options.plist || \
-          flutter build ipa --release
+          cat > /tmp/export_options.plist << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>teamID</key>
+            <string>85L4QD8R5S</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>com.getfit4me.app</key>
+              <string>GetFit4Me App Store</string>
+            </dict>
+            <key>compileBitcode</key>
+            <false/>
+          </dict>
+          </plist>
+          EOF
+          flutter build ipa --release --export-options-plist=/tmp/export_options.plist
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
