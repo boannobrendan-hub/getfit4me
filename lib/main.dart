@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'firebase_options.dart';
 import 'screens/auth_screen.dart';
@@ -19,7 +18,6 @@ Future<void> main() async {
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // Initialize RevenueCat
   await Purchases.setLogLevel(LogLevel.debug);
   await Purchases.configure(
     PurchasesConfiguration('appl_wLMSomVpuKbkFvrmfPMxZTXFNzO'),
@@ -41,12 +39,6 @@ class GetFit4MeApp extends StatelessWidget {
   }
 }
 
-/// Decides which top-level screen to show based on onboarding progress,
-/// auth state, and subscription status. Onboarding flags (hook/waiver
-/// seen) are intentionally kept local — they're a one-time first-run
-/// experience, not something that needs to sync across devices. Auth and
-/// subscription state, by contrast, come from Firebase so they're
-/// consistent everywhere the user signs in.
 class _RootRouter extends StatefulWidget {
   const _RootRouter();
 
@@ -57,14 +49,44 @@ class _RootRouter extends StatefulWidget {
 class _RootRouterState extends State<_RootRouter> {
   bool _hookSeen = false;
   bool _waiverAccepted = false;
+  bool _prefsLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPrefs();
+  }
+
+  Future<void> _loadPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _hookSeen = prefs.getBool('hookSeen') ?? false;
+      _waiverAccepted = prefs.getBool('waiverAccepted') ?? false;
+      _prefsLoaded = true;
+    });
+  }
+
+  Future<void> _markHookSeen() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('hookSeen', true);
+    setState(() => _hookSeen = true);
+  }
+
+  Future<void> _markWaiverAccepted() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('waiverAccepted', true);
+    setState(() => _waiverAccepted = true);
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (!_prefsLoaded) return const _SplashLoader();
+
     if (!_hookSeen) {
-      return HookScreen(onContinue: () => setState(() => _hookSeen = true));
+      return HookScreen(onContinue: _markHookSeen);
     }
     if (!_waiverAccepted) {
-      return WaiverScreen(onAccepted: () => setState(() => _waiverAccepted = true));
+      return WaiverScreen(onAccepted: _markWaiverAccepted);
     }
 
     return StreamBuilder<User?>(
@@ -77,7 +99,6 @@ class _RootRouterState extends State<_RootRouter> {
           return const AuthScreen();
         }
 
-        // Signed in — now check subscription status from Firestore.
         return StreamBuilder<dynamic>(
           stream: FirestoreService().watchUserProfile(),
           builder: (context, profileSnapshot) {
