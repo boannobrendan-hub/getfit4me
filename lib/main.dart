@@ -51,10 +51,14 @@ class _RootRouterState extends State<_RootRouter> {
   bool _waiverAccepted = false;
   bool _prefsLoaded = false;
 
+  // Auth state: null = still loading, true = logged in, false = not logged in
+  bool? _isLoggedIn;
+
   @override
   void initState() {
     super.initState();
     _loadPrefs();
+    _initAuth();
   }
 
   Future<void> _loadPrefs() async {
@@ -63,6 +67,22 @@ class _RootRouterState extends State<_RootRouter> {
       _hookSeen = prefs.getBool('hookSeen') ?? false;
       _waiverAccepted = prefs.getBool('waiverAccepted') ?? false;
       _prefsLoaded = true;
+    });
+  }
+
+  void _initAuth() {
+    // Listen to auth state changes
+    FirebaseAuth.instance.authStateChanges().listen((user) {
+      if (mounted) {
+        setState(() => _isLoggedIn = user != null);
+      }
+    });
+
+    // Timeout: if Firebase Auth doesn't respond in 5 seconds, go to sign-in
+    Future.delayed(const Duration(seconds: 5), () {
+      if (mounted && _isLoggedIn == null) {
+        setState(() => _isLoggedIn = false);
+      }
     });
   }
 
@@ -89,32 +109,27 @@ class _RootRouterState extends State<_RootRouter> {
       return WaiverScreen(onAccepted: _markWaiverAccepted);
     }
 
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, authSnapshot) {
-        if (authSnapshot.connectionState == ConnectionState.waiting) {
+    // Still waiting for Firebase Auth (max 5 seconds)
+    if (_isLoggedIn == null) return const _SplashLoader();
+
+    // Not logged in → show sign-in screen
+    if (!_isLoggedIn!) return const AuthScreen();
+
+    // Logged in → check subscription
+    return StreamBuilder<dynamic>(
+      stream: FirestoreService().watchUserProfile(),
+      builder: (context, profileSnapshot) {
+        if (profileSnapshot.connectionState == ConnectionState.waiting) {
           return const _SplashLoader();
         }
-        if (!authSnapshot.hasData) {
-          return const AuthScreen();
+
+        final data = profileSnapshot.data?.data() as Map<String, dynamic>?;
+        final sub = SubscriptionState.fromFirestore(data);
+
+        if (!sub.isActive) {
+          return PaywallScreen(sub: sub);
         }
-
-        return StreamBuilder<dynamic>(
-          stream: FirestoreService().watchUserProfile(),
-          builder: (context, profileSnapshot) {
-            if (profileSnapshot.connectionState == ConnectionState.waiting) {
-              return const _SplashLoader();
-            }
-
-            final data = profileSnapshot.data?.data() as Map<String, dynamic>?;
-            final sub = SubscriptionState.fromFirestore(data);
-
-            if (!sub.isActive) {
-              return PaywallScreen(sub: sub);
-            }
-            return MainShell(sub: sub);
-          },
-        );
+        return MainShell(sub: sub);
       },
     );
   }
