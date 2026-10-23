@@ -37,8 +37,12 @@ class FirestoreService {
     }, SetOptions(merge: true));
   }
 
+  /// Watches the user's profile document. Returns an empty stream if no
+  /// user is signed in, so the StreamBuilder never gets stuck in waiting.
   Stream<DocumentSnapshot<Map<String, dynamic>>> watchUserProfile() {
-    return _userDoc.snapshots();
+    final uid = _uid;
+    if (uid == null) return const Stream.empty();
+    return _db.collection('users').doc(uid).snapshots();
   }
 
   Future<void> updateProfileEmoji(String emoji) =>
