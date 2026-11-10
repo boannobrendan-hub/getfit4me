@@ -14,6 +14,7 @@ class PaywallScreen extends StatefulWidget {
 class _PaywallScreenState extends State<PaywallScreen> {
   final _firestoreService = FirestoreService();
   bool _processing = false;
+  bool _loadError = false;
   List<Package> _packages = [];
   String? _selectedPackageId;
 
@@ -25,7 +26,8 @@ class _PaywallScreenState extends State<PaywallScreen> {
 
   Future<void> _loadOfferings() async {
     try {
-      final offerings = await Purchases.getOfferings();
+      final offerings = await Purchases.getOfferings()
+          .timeout(const Duration(seconds: 10));
       final current = offerings.current;
       if (current != null && mounted) {
         setState(() {
@@ -34,9 +36,12 @@ class _PaywallScreenState extends State<PaywallScreen> {
           _selectedPackageId = current.monthly?.identifier ??
               (_packages.isNotEmpty ? _packages.first.identifier : null);
         });
+      } else if (mounted) {
+        setState(() => _loadError = true);
       }
     } catch (e) {
       debugPrint('Error loading offerings: $e');
+      if (mounted) setState(() => _loadError = true);
     }
   }
 
@@ -227,7 +232,26 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     ],
 
                     // Plan selector
-                    if (_packages.isEmpty)
+                    if (_loadError) ...[
+                      const Icon(Icons.wifi_off, color: Color(0xFF78909C), size: 40),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Unable to load plans.\nPlease check your connection and try again.',
+                        style: TextStyle(color: Colors.white70, fontSize: 14),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      TextButton(
+                        onPressed: () {
+                          setState(() {
+                            _loadError = false;
+                            _packages = [];
+                          });
+                          _loadOfferings();
+                        },
+                        child: const Text('Retry', style: TextStyle(color: Color(0xFF00BFA5), fontSize: 15)),
+                      ),
+                    ] else if (_packages.isEmpty)
                       const CircularProgressIndicator(color: Color(0xFF00BFA5))
                     else ...[
                       const Text('Choose a Plan', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
